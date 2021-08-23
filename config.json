@@ -5,10 +5,10 @@
         ]
     },
     "userset": {
-        "name": "Cursors",
+        "name": "Cursor",
         "color": "#adffad"
     },
     "settings": {
-        "chatOnConnect": false
+        "chatOnConnect": true
     }
 }
