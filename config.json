@@ -1,0 +1,14 @@
+{
+    "channels": {
+        "wss://mppclone.com:8443": [
+            "✧𝓓𝓔𝓥 𝓡𝓸𝓸𝓶✧"
+        ]
+    },
+    "userset": {
+        "name": "Cursors",
+        "color": "#adffad"
+    },
+    "settings": {
+        "chatOnConnect": false
+    }
+}

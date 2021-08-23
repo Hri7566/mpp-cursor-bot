@@ -1,0 +1,20 @@
+{
+  "name": "mpp-cursor-bot",
+  "version": "1.0.0",
+  "description": "Cursor Bot for MPP",
+  "main": "index.js",
+  "repository": "https://github.com/Hri7566/mpp-cursor-bot.git",
+  "author": "Hri7566 <hri7566@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "node .",
+    "test": "npx nodemon"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "dotenv": "^10.0.0",
+    "sandbox": "^0.8.6",
+    "ws": "^8.2.0"
+  }
+}
