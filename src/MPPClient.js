@@ -31,7 +31,7 @@ class MPPClient extends EventEmitter {
             this.emit('connect');
 
             this.cursorSendInterval = setInterval(() => {
-                this.emit('sendCursor', this.cfh.cursor.pos.x, this.cfh.cursor.pos.y);
+                this.emit('sendCursor', this.cfh.cursor.pos.x + this.cfh.cursor.anchor.x, this.cfh.cursor.pos.y + this.cfh.cursor.anchor.y);
             }, 1000 / 20);
 
             this.logger.log('Ready.');

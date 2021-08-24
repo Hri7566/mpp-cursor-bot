@@ -161,9 +161,9 @@ class CursorFunctionHandler extends EventEmitter {
         //     vsine_anglev: 2
         // });
 
-        // cfh.addFunc('hsine', {
-        //     hsine_anglev: 1
-        // });
+        cfh.addFunc('hsine', {
+            hsine_anglev: 1
+        });
 
         // cfh.addFunc('dvd', {
         //     top: Cursor.screenBoundaries.top + 10,
@@ -177,16 +177,16 @@ class CursorFunctionHandler extends EventEmitter {
             left: Cursor.screenBoundaries.left + 10,
             right: Cursor.screenBoundaries.right - 10
         });
-        // cfh.addFunc('dvdy', {
-        //     top: Cursor.screenBoundaries.top + 10,
-        //     bottom: Cursor.screenBoundaries.bottom - 10
+        cfh.addFunc('dvdy', {
+            top: Cursor.screenBoundaries.top + 10,
+            bottom: Cursor.screenBoundaries.bottom - 10
+        });
+        // cfh.addFunc('vsine', {
+        //     vsine_anglev: 2
         // });
-        cfh.addFunc('vsine', {
-            vsine_anglev: 2
-        });
-        cfh.addFunc('hsine', {
-            hsine_anglev: 1
-        });
+        // cfh.addFunc('hsine', {
+        //     hsine_anglev: 1
+        // });
 
         return cfh;
     }
@@ -205,7 +205,6 @@ class CursorFunctionHandler extends EventEmitter {
         this.updateLoop = setInterval(() => {
             this.tick();
         }, 1000 / frameRate || 60);
-
     }
 
     tick() {
@@ -337,6 +336,7 @@ new CursorFunction('vsine', (c, set) => {
 }, (c, dt) => {
     c.vsine_angle += c.vsine_anglev * dt;
     c.anchor.y = Math.sin(c.vsine_angle * 10) * 10;
+    // console.log(c.anchor);
 });
 
 new CursorFunction('hsine', (c, set) => {

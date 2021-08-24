@@ -9,6 +9,6 @@
         "color": "#adffad"
     },
     "settings": {
-        "chatOnConnect": true
+        "chatOnConnect": false
     }
 }
