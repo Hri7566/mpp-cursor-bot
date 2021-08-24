@@ -8,10 +8,12 @@ class Vector2 {
      static add(...args) {
         let outv = new Vector2();
         for (let v of args) {
+            console.log(v);
             if (!(v instanceof Vector2)) continue;
             outv.x += v.x;
             outv.y += v.y;
         }
+        return outv;
     }
 
     static get a() {
@@ -29,6 +31,7 @@ class Vector2 {
             outv.x -= v.x;
             outv.y -= v.y;
         }
+        return outv;
     }
 
     static get sub() {
@@ -50,6 +53,7 @@ class Vector2 {
             outv.x *= v.x;
             outv.y *= v.y;
         }
+        return outv;
     }
 
     static get mult() {
@@ -71,6 +75,7 @@ class Vector2 {
             outv.x /= v.x;
             outv.y /= v.y;
         }
+        return outv;
     }
 
     static get div() {
@@ -123,6 +128,8 @@ class Cursor {
         this.position = pos instanceof Vector2 ? new Vector2(pos.x, pos.y) : Vector2.midpoint(Cursor.screenBoundaries.topLeft, Cursor.screenBoundaries.bottomRight);
         this.anchor = new Vector2(0, 0);
         this.velocity = vel instanceof Vector2 ? new Vector2(vel.x, vel.y) : new Vector2(0, 0);
+        this.acceleration = new Vector2(0, 0);
+        this.gravity = 0;
     }
 
     get pos() {
@@ -132,6 +139,14 @@ class Cursor {
     get vel() {
         return this.velocity;
     }
+
+    get acc() {
+        return this.acceleration;
+    }
+
+    get g() {
+        return this.gravity;
+    }
 }
 
 class CursorFunctionHandler extends EventEmitter {
@@ -139,22 +154,44 @@ class CursorFunctionHandler extends EventEmitter {
     
     static get default() {
         let cfh = new CursorFunctionHandler();
+
+        this.cursorInt = setInterval(() => {});
+
+        // cfh.addFunc('vsine', {
+        //     vsine_anglev: 2
+        // });
+
+        // cfh.addFunc('hsine', {
+        //     hsine_anglev: 1
+        // });
+
+        // cfh.addFunc('dvd', {
+        //     top: Cursor.screenBoundaries.top + 10,
+        //     left: Cursor.screenBoundaries.left + 10,
+        //     right: Cursor.screenBoundaries.right - 10,
+        //     bottom: Cursor.screenBoundaries.bottom - 10,
+        // });
+
+        cfh.addFunc('bounce');
+        cfh.addFunc('dvdx', {
+            left: Cursor.screenBoundaries.left + 10,
+            right: Cursor.screenBoundaries.right - 10
+        });
+        // cfh.addFunc('dvdy', {
+        //     top: Cursor.screenBoundaries.top + 10,
+        //     bottom: Cursor.screenBoundaries.bottom - 10
+        // });
         cfh.addFunc('vsine', {
-            vsine_anglev: 0.0005
+            vsine_anglev: 2
         });
         cfh.addFunc('hsine', {
-            hsine_anglev: 0.0007
+            hsine_anglev: 1
         });
-        cfh.addFunc('dvd', {
-            top: Cursor.screenBoundaries.top + 10,
-            left: Cursor.screenBoundaries.left + 10,
-            right: Cursor.screenBoundaries.right - 10,
-            bottom: Cursor.screenBoundaries.bottom - 10
-        });
+
         return cfh;
     }
 
-    constructor (fr) {
+    constructor (frameRate) {
         super();
 
         this.cursor = new Cursor();
@@ -164,15 +201,16 @@ class CursorFunctionHandler extends EventEmitter {
         this.time = new Date();
         this.oldTime = new Date();
         this.deltaTime = (this.time - this.oldTime) / 100;
-
+        
         this.updateLoop = setInterval(() => {
             this.tick();
-        }, 1000 / fr || 60);
+        }, 1000 / frameRate || 60);
+
     }
 
     tick() {
         this.time = new Date();
-        this.deltaTime = this.time - this.oldTime;
+        this.deltaTime = (this.time - this.oldTime) / 100;
 
         for (let f of this.funcs) {
             f.func(this.cursor, this.deltaTime);
@@ -187,10 +225,23 @@ class CursorFunctionHandler extends EventEmitter {
         if (!CursorFunctionHandler.allFuncs.has(str)) return false;
 
         let f = CursorFunctionHandler.allFuncs.get(str);
-
         f.pre(this.cursor, set);
-
         this.funcs.push(f);
+        
+        return true;
+    }
+
+    removeFunc(str) {
+        if (!CursorFunctionHandler.allFuncs.has(str)) return false;
+
+        let f = CursorFunctionHandler.allFuncs.get(str);
+
+        if (!f) return false;
+        if (this.funcs.indexOf(f) == -1) {
+            return false;
+        } else {
+            this.funcs.splice(this.funcs.indexOf(f), 1);
+        }
         
         return true;
     }
@@ -235,9 +286,9 @@ class CursorFunction {
     }
 }
 
-new CursorFunction('dvd', (c, set) => {
-    if (c.vel.x == 0) c.vel.x = 0.01;
-    if (c.vel.y == 0) c.vel.y = 0.02;
+new CursorFunction('dvdx', (c, set) => {
+    if (!c.hasOwnProperty('dvd_vel')) c.dvd_vel = new Vector2(0, 0);
+    c.dvd_vel.x = 1;
     
     c.dvd_boundary = Cursor.screenBoundaries;
 
@@ -245,18 +296,33 @@ new CursorFunction('dvd', (c, set) => {
 
     if (set.hasOwnProperty('left')) c.dvd_boundary.left = set.left;
     if (set.hasOwnProperty('right')) c.dvd_boundary.right = set.right;
-    if (set.hasOwnProperty('top')) c.dvd_boundary.top = set.top;
-    if (set.hasOwnProperty('bottom')) c.dvd_boundary.bottom = set.bottom;
+
+    if (set.hasOwnProperty('velx')) c.dvd_vel.x = set.velx;
 }, (c, dt) => {
-    c.pos.x += c.vel.x * dt;
-    c.pos.y += c.vel.y * dt;
+    c.pos.x += c.dvd_vel.x * dt;
 
     if (c.pos.x < Cursor.screenBoundaries.left || c.pos.x > Cursor.screenBoundaries.right) {
-        c.vel.x = -c.vel.x;
+        c.dvd_vel.x = -c.dvd_vel.x;
     }
+});
+
+new CursorFunction('dvdy', (c, set) => {
+    if (!c.hasOwnProperty('dvd_vel')) c.dvd_vel = new Vector2(0, 0);
+    c.dvd_vel.y = 2;
+    
+    c.dvd_boundary = Cursor.screenBoundaries;
+
+    if (!set) return;
+    
+    if (set.hasOwnProperty('top')) c.dvd_boundary.top = set.top;
+    if (set.hasOwnProperty('bottom')) c.dvd_boundary.bottom = set.bottom;
+
+    if (set.hasOwnProperty('vely')) c.dvd_vel.y = set.vely;
+}, (c, dt) => {
+    c.pos.y += c.dvd_vel.y * dt;
 
     if (c.pos.y < Cursor.screenBoundaries.top || c.pos.y > Cursor.screenBoundaries.bottom) {
-        c.vel.y = -c.vel.y;
+        c.dvd_vel.y = -c.dvd_vel.y;
     }
 });
 
@@ -284,6 +350,24 @@ new CursorFunction('hsine', (c, set) => {
 }, (c, dt) => {
     c.hsine_angle += c.hsine_anglev * dt;
     c.anchor.x = Math.sin(c.hsine_angle * 10) * 10;
+});
+
+new CursorFunction('bounce', (c, set) => {
+    c.gravity = 0.05;
+    c.vel.x = 2;
+    c.vel.y = 0;
+    c.acc.y = c.gravity;
+    if (!set) return;
+}, (c, dt) => {
+
+    if (c.pos.y > Cursor.screenBoundaries.bottom || c.pos.y + c.vel.y > Cursor.screenBoundaries.bottom) {
+        if (c.vel.y > 0) c.vel.y = -8;
+        c.acc.y = 0;
+    } else {
+        c.acc.y += c.g;
+        c.vel.y += c.acc.y;
+        c.pos.y += c.vel.y * dt;
+    }
 });
 
 module.exports = {

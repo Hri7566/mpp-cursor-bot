@@ -2,9 +2,11 @@ const Client = require('./Client');
 const EventEmitter = require('events');
 const { Logger } = require('./Logger');
 const chalk = require('chalk');
-const { Cursor, Vector2, CursorFunctionHandler } = require('./Cursor');
+const { CursorFunctionHandler } = require('./Cursor');
 
 const MPPC_TOKEN = process.env.MPPC_TOKEN;
+
+if (!MPPC_TOKEN) throw "No token in .env";
 
 class MPPClient extends EventEmitter {
     constructor (uri, room, config) {
@@ -15,7 +17,7 @@ class MPPClient extends EventEmitter {
         this.bind();
 
         this.logger = new Logger(room, chalk.yellow);
-        this.client = new Client(uri);
+        this.client = new Client(uri, MPPC_TOKEN);
         this.room = room;
         this.defaultUser = config.userset;
 
@@ -28,9 +30,9 @@ class MPPClient extends EventEmitter {
         this.on('ready', () => {
             this.emit('connect');
 
-            this.cfh.on('tick', (x, y) => {
-                this.emit('sendCursor', x, y);
-            });
+            this.cursorSendInterval = setInterval(() => {
+                this.emit('sendCursor', this.cfh.cursor.pos.x, this.cfh.cursor.pos.y);
+            }, 1000 / 20);
 
             this.logger.log('Ready.');
         });
@@ -57,7 +59,7 @@ class MPPClient extends EventEmitter {
             });
 
             this.logger.log(`Connecting...`);
-            this.client.start(MPPC_TOKEN);
+            this.client.start();
         });
 
         this.on('receiveChat', msg => {
