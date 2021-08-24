@@ -17,7 +17,7 @@ function mixin(obj1, obj2) {
 };
 
 
-function Client(uri) {
+function Client(uri, token) {
 	EventEmitter.call(this);
 	this.uri = uri;
 	this.ws = undefined;
@@ -35,6 +35,7 @@ function Client(uri) {
 	this.noteBuffer = [];
 	this.noteBufferTime = 0;
 	this.noteFlushInterval = undefined;
+	this.token = token;
 	this['🐈'] = 0;
 
 	this.bindEventListeners();
@@ -58,9 +59,9 @@ Client.prototype.isConnecting = function() {
 	return this.isSupported() && this.ws && this.ws.readyState === WebSocket.CONNECTING;
 };
 
-Client.prototype.start = function(token) {
+Client.prototype.start = function() {
 	this.canConnect = true;
-	this.connect(token);
+	this.connect();
 };
 
 Client.prototype.stop = function() {
@@ -68,7 +69,7 @@ Client.prototype.stop = function() {
 	this.ws.close();
 };
 
-Client.prototype.connect = function(token) {
+Client.prototype.connect = function() {
 	if(!this.canConnect || !this.isSupported() || this.isConnected() || this.isConnecting())
 		return;
 	this.emit("status", "Connecting...");
@@ -112,7 +113,11 @@ Client.prototype.connect = function(token) {
 	});
 	this.ws.addEventListener("open", function(evt) {
 		self.connectionTime = Date.now();
-		self.sendArray([{"m": "hi", "🐈": self['🐈']++ || undefined, token: token, _id: 'cursor' }]);
+		if (typeof self.token == 'undefined') {
+			throw "eyy no token";
+			return;
+		}
+		self.sendArray([{"m": "hi", "🐈": self['🐈']++ || undefined, token: self.token, _id: 'cursor' }]);
 		self.pingInterval = setInterval(function() {
 			self.sendArray([{m: "t", e: Date.now()}]);
 		}, 20000);
